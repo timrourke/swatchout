@@ -10,7 +10,6 @@ import (
 	_ "image/jpeg"
 	"log"
 	"os"
-	"time"
 )
 
 type rgbaOutput struct {
@@ -21,7 +20,7 @@ type rgbaOutput struct {
 }
 
 func main() {
-	startTime := time.Now()
+	// Take in `-numcolors={int} "{path_to_file.jpg}"` command-line args
 	numColors := flag.Int("numcolors", 5, "Number of colors to generate")
 	flag.Parse()
 	filePath := flag.Args()
@@ -36,13 +35,18 @@ func main() {
 	}
 	defer reader.Close()
 
+	// Decode image
 	originalImage, _, err := image.Decode(reader)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// Resize image to fit within 200x200 pixels (larger images do not improve
+	// the selection of colors for a palette significantly)
 	m := resize.Resize(200, 200, originalImage, resize.NearestNeighbor)
 	bounds := m.Bounds()
 
+	// Construct a slice containing rgba values for every pixel in the image
 	lengthX := bounds.Max.X - bounds.Min.X
 	lengthY := bounds.Max.Y - bounds.Min.Y
 	dimensions := lengthX * lengthY
@@ -60,10 +64,11 @@ func main() {
 		}
 	}
 
+	// Run a k-means algorithm to group colors into clusters
 	swatch, _ := kmeans.Cluster(pixels, *numColors)
 
+	// Build structs for json output
 	output := make([]rgbaOutput, *numColors, *numColors)
-
 	for idx, rgba := range swatch {
 		color := rgbaOutput{
 			R: rgba[0] / 256,
@@ -74,10 +79,11 @@ func main() {
 		output[idx] = color
 	}
 
+	// Encode json
 	jsonOutput, err := json.Marshal(output)
 	if err != nil {
 		fmt.Println("error:", err)
 	}
-	fmt.Println(time.Now().Sub(startTime))
+
 	os.Stdout.Write(jsonOutput)
 }
