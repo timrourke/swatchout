@@ -7,16 +7,18 @@ import (
 	"github.com/nfnt/resize"
 	"github.com/timrourke/swatchout/kmeans"
 	"image"
+	_ "image/gif"
 	_ "image/jpeg"
+	_ "image/png"
 	"log"
 	"os"
 )
 
 type rgbaOutput struct {
-	R float64 `json:"r"`
-	G float64 `json:"g"`
-	B float64 `json:"b"`
-	A float64 `json:"a"`
+	R int     `json:"r"`
+	G int     `json:"g"`
+	B int     `json:"b"`
+	A float32 `json:"a"`
 }
 
 func main() {
@@ -71,10 +73,10 @@ func main() {
 	output := make([]rgbaOutput, *numColors, *numColors)
 	for idx, rgba := range swatch {
 		color := rgbaOutput{
-			R: rgba[0] / 256,
-			G: rgba[1] / 256,
-			B: rgba[2] / 256,
-			A: (rgba[3] / 255) - 256,
+			R: int(rgba[0]+1) >> 8,
+			G: int(rgba[1]+1) >> 8,
+			B: int(rgba[2]+1) >> 8,
+			A: float32((rgba[3] + 1) / 65536),
 		}
 		output[idx] = color
 	}
