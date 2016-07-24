@@ -25,6 +25,9 @@ func main() {
 	numColors := flag.Int("numcolors", 5, "Number of colors to generate")
 	flag.Parse()
 	filePath := flag.Args()
+	if len(filePath) == 0 {
+		log.Fatal("Must specify a filename.")
+	}
 
 	// Read in image
 	reader, err := os.Open(filePath[0])

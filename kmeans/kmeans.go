@@ -6,15 +6,15 @@ package kmeans
 import (
 	"math"
 	"math/rand"
-	"sync"
 )
 
-// Calculate distance between 2 4-dimensional coordinates
+// Calculate distance between 2 4-dimensional coordinates. Simple multiplication
+// is much faster here than using math.Pow.
 func distance4d(coords1 []float64, coords2 []float64) float64 {
-	l1 := math.Pow(coords2[0]-coords1[0], 2.0)
-	l2 := math.Pow(coords2[1]-coords1[1], 2.0)
-	l3 := math.Pow(coords2[2]-coords1[2], 2.0)
-	l4 := math.Pow(coords2[3]-coords1[3], 2.0)
+	l1 := (coords2[0] - coords1[0]) * (coords2[0] - coords1[0])
+	l2 := (coords2[1] - coords1[1]) * (coords2[1] - coords1[1])
+	l3 := (coords2[2] - coords1[2]) * (coords2[2] - coords1[2])
+	l4 := (coords2[3] - coords1[3]) * (coords2[3] - coords1[3])
 	return math.Sqrt(l1 + l2 + l3 + l4)
 }
 
@@ -60,7 +60,6 @@ func Cluster(points [][]float64, k int) ([][]float64, [][][]float64) {
 		movement           bool
 		numPoints          int
 		g, h, i, j, l      int
-		wg                 sync.WaitGroup
 	)
 
 	// Create initial state
@@ -72,13 +71,9 @@ func Cluster(points [][]float64, k int) ([][]float64, [][][]float64) {
 
 	for movement {
 		// update point-to-centroid assignments
-		wg.Add(numPoints)
 		for i = 0; i < numPoints; i++ {
-			go func(i int) {
-				centroidAssignment[i] = classify(points[i], centroids)
-			}(i)
+			centroidAssignment[i] = classify(points[i], centroids)
 		}
-		wg.Done()
 
 		// update location of each centroid
 		movement = false
